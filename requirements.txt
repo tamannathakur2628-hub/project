@@ -1,8 +1,8 @@
 streamlit
-openai
 langchain
-chromadb
-python-docx
+langchain-community
+langchain-openai
+python-dotenv
 PyPDF2
-dotenv
+faiss-cpu
 reportlab
