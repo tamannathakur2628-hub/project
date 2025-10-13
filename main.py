@@ -21,8 +21,20 @@ load_dotenv()
 # ================================
 # CONFIGURE YOUR DEFAULT DOCUMENT PATH HERE
 # ================================
-DEFAULT_DOCUMENT_PATH = ""  # Replace with your actual file path
-# Supported formats: PDF, DOC, DOCX
+uploaded_file = st.file_uploader("📄 Upload your document (PDF or DOCX)", type=["pdf", "docx"])
+
+if uploaded_file:
+    # Save the uploaded file temporarily
+    file_extension = uploaded_file.name.split('.')[-1]
+    temp_file_path = f"temp_uploaded_file.{file_extension}"
+    
+    with open(temp_file_path, "wb") as f:
+        f.write(uploaded_file.getbuffer())
+    
+    DEFAULT_DOCUMENT_PATH = temp_file_path
+else:
+    DEFAULT_DOCUMENT_PATH = ""
+    st.info("👆 Please upload a PDF or DOCX document to begin.")
 
 # Page configuration
 st.set_page_config(
