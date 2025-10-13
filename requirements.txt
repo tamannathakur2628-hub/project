@@ -1,0 +1,8 @@
+streamlit
+openai
+langchain
+chromadb
+python-docx
+PyPDF2
+dotenv
+reportlab
