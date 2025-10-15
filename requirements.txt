@@ -7,5 +7,6 @@ PyPDF2
 faiss-cpu
 reportlab
 docx2txt
+google-generativeai
 
 
