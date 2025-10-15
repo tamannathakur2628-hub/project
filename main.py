@@ -2,9 +2,9 @@ import os
 import streamlit as st
 from langchain_community.document_loaders import Docx2txtLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
+# from langchain_openai import OpenAIEmbeddings # Old: OpenAI
+# from langchain_openai import ChatOpenAI # Old: OpenAI
 from langchain_community.vectorstores import FAISS
-from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
 import PyPDF2
 from langchain.schema import Document
@@ -14,6 +14,11 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 import io
 import base64
+
+# New: Google Generative AI imports
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_google_genai import ChatGoogleGenerativeAI
+import google.generativeai as genai
 
 # Load environment variables
 load_dotenv()
@@ -64,7 +69,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Get API key
-api_key = os.getenv("OPENAI_API_KEY")
+# New: Use GOOGLE_API_KEY
+google_api_key = os.getenv("GOOGLE_API_KEY")
 
 def load_default_document():
     """Load the default document"""
@@ -184,14 +190,18 @@ def get_download_link(pdf_buffer, filename):
 st.markdown('<h1 class="main-header">Question Generator</h1>', unsafe_allow_html=True)
 
 # Initialize document processing
-if not api_key:
-    st.error("OpenAI API Key required in .env file")
+# New: Use google_api_key
+if not google_api_key:
+    st.error("Google API Key required in .env file (GOOGLE_API_KEY)")
     st.stop()
+
+# Configure Google Generative AI
+genai.configure(api_key=google_api_key)
 
 # Auto-load document
 if not st.session_state.get("document_processed", False):
-    if not os.path.exists(DEFAULT_DOCUMENT_PATH):
-        st.error("Document not found. Please check the file path in the code.")
+    if not DEFAULT_DOCUMENT_PATH or not os.path.exists(DEFAULT_DOCUMENT_PATH):
+        st.error("No document uploaded or document not found. Please upload a file.")
         st.stop()
     
     with st.spinner("Preparing document..."):
@@ -207,7 +217,8 @@ if not st.session_state.get("document_processed", False):
                 chunks = splitter.split_text(doc.page_content)
                 texts.extend(chunks)
             
-            embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+            # New: Use GoogleGenerativeAIEmbeddings
+            embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=google_api_key)
             vectordb = FAISS.from_texts(
                 texts, 
                 embeddings, 
@@ -277,11 +288,12 @@ if st.session_state.get("document_processed", False):
                     context = "\n\n".join(random_chunks)
                     
                     question_prompt = create_question_prompt()
-                    llm = ChatOpenAI(
+                    
+                    # New: Use ChatGoogleGenerativeAI
+                    llm = ChatGoogleGenerativeAI(
+                        model="gemini-pro", # You can try "gemini-1.5-flash" or "gemini-1.5-pro" if you have access
                         temperature=0.3,
-                        openai_api_key=api_key,
-                        model_name="gpt-4o-mini",
-                        max_tokens=1500
+                        google_api_key=google_api_key,
                     )
                     
                     full_prompt = question_prompt.format(context=context[:6000])
